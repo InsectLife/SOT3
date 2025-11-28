@@ -52,8 +52,10 @@ A simulação utiliza a seguinte configuração de dispositivos:
 
 Abaixo, um exemplo do formato de saída gerado pelo simulador, demonstrando o fluxo de interrupção e retomada:
 
-[Tempo 0] - Processo principal em execução.
+```text
+[Tempo 0]  - Processo principal em execução.
 [Tempo 10] - Interrupção: Teclado - Prioridade: Alta - Armazenando contexto do processo principal.
 [Tempo 11] - Tratando a interrupção do teclado.
 [Tempo 15] - Interrupção tratada. Restaurando o contexto do processo principal.
 [Tempo 16] - Processo principal retomado.
+...
