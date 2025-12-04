@@ -1,61 +1,81 @@
-# Simulador de Gerenciamento de Entrada e Saída com Interrupção
+# Trabalho Prático 3 - Simulador de Gerenciamento de Entrada e Saída
 
-## Sobre o Projeto
+**Disciplina:** Sistemas Operacionais  
+**Instituição:** Universidade Federal do Pampa (UNIPAMPA)
 
-Este projeto é um simulador desenvolvido em Python para estudar e visualizar o funcionamento do gerenciamento de Entrada e Saída (E/S) em Sistemas Operacionais. Ele implementa o mecanismo de interrupções de hardware, demonstrando como o processador lida com eventos externos, prioridades e a preservação do estado dos processos.
+## 📌 Sobre o Projeto
 
-O objetivo é ilustrar de forma clara como o sistema operacional pausa um processo em execução para atender requisições de dispositivos (Teclado, Impressora, Disco), realiza a troca de contexto e posteriormente retoma a execução original.
+Este projeto consiste em um simulador desenvolvido em Python para demonstrar o funcionamento do **Subsistema de Entrada e Saída (E/S)** de um Sistema Operacional. O foco principal é a implementação do mecanismo de **interrupções de hardware**, ilustrando como o processador lida com eventos externos, respeita hierarquias de prioridade e preserva o estado (contexto) dos processos.
 
-## Funcionalidades
+O software simula o ciclo de vida de uma interrupção:
+1. Pausa do processo em execução (Salvar Contexto).
+2. Arbitragem de prioridade (Scheduler de Interrupções).
+3. Execução da rotina de tratamento.
+4. Retorno ao processo original (Restaurar Contexto).
 
-- **Simulação de Dispositivos**: Geração aleatória de interrupções vindas de diferentes periféricos (Teclado, Impressora e Disco).
-- **Gerenciamento de Prioridades**: Tratamento de requisições simultâneas ou concorrentes baseado na hierarquia de importância do dispositivo.
-- **Troca de Contexto**: Simulação do armazenamento (salvamento) e recuperação do estado do processo interrompido.
-- **Log de Eventos**: Geração de um registro detalhado (na tela ou arquivo) mostrando o fluxo temporal, desde a interrupção até a retomada do processo.
+## 🚀 Funcionalidades
 
-## Como Executar
+* **Gerador de Eventos Aleatórios:** Simulação de interrupções vindas de periféricos distintos (Teclado, Impressora e Disco) em momentos aleatórios.
+* **Arbitragem de Prioridade:** Implementação de uma fila de prioridades que garante que dispositivos críticos (ex: Teclado) sejam atendidos antes de dispositivos de baixa prioridade, mesmo em casos de **interrupções simultâneas**.
+* **Troca de Contexto:** Simulação do salvamento de registradores (PC, status) e posterior restauração.
+* **Log Detalhado:** Geração automática do arquivo `log_simulacao.txt` contendo o registro temporal de todos os eventos e estatísticas finais.
 
-O projeto consiste em um script principal. Para executá-lo:
+## 🛠️ Tecnologias e Estrutura
 
-1. Certifique-se de ter o Python 3 instalado em sua máquina.
-2. Baixe o código fonte (arquivo .py).
-3. No terminal, execute o comando:
+* **Linguagem:** Python 3.x (Bibliotecas padrão: `random`, `enum`, `typing`, `datetime`).
+* **Arquitetura:**
+    * `Dispositivo`: Define as características dos periféricos.
+    * `Interrupcao`: Objeto comparável para ordenação na fila de prioridades.
+    * `GerenciadorInterrupcoes`: Controla a fila, o salvamento de contexto e a lógica de escalonamento.
+    * `SimuladorIO`: Classe principal que orquestra o loop de tempo (clock) e o fluxo de execução.
+
+## 📋 Hierarquia de Prioridades
+
+O simulador utiliza a seguinte tabela de prioridades para o tratamento de eventos:
+
+| Dispositivo | Prioridade | Nível  | Comportamento |
+|:-----------:|:----------:|:------:|:--------------|
+| **Teclado** | 1          | Alta   | Atendimento Imediato |
+| **Impressora**| 2        | Média  | Aguarda Alta prioridade |
+| **Disco** | 3          | Baixa  | Aguarda Alta e Média |
+
+## ⚙️ Como Executar
+
+O projeto não requer instalação de bibliotecas externas. Para rodar a simulação:
+
+1. Certifique-se de ter o Python 3 instalado.
+2. Execute o arquivo principal no terminal:
 
 ```bash
 python simulador_io.py
 ```
+3. Ao final da execução, verifique o arquivo gerado log_simulacao.txt no mesmo diretório para ver o relatório completo.
+
+## 📄 Entendendo o Log (Legenda)
+
+O simulador gera logs visuais para facilitar o rastreamento do fluxo de execução. Abaixo, o significado de cada tag:
+
+* [!] : Colisão de Interrupções. Indica que múltiplos dispositivos solicitaram atenção ao mesmo tempo (teste de prioridade).
+
+* [+] : Interrupção adicionada à fila de espera (aguardando tratamento).
+
+* [*] : Início do processamento da interrupção (Contexto salvo).
+
+* [>] : Ciclo de tratamento da interrupção em andamento.
+
+* [OK]: Interrupção finalizada (Contexto restaurado).
+
+* [<] : Retorno ao processo principal (User mode)
+
+## 🔍 Exemplo de Saída
 
 
-## Mecanismos Implementados
-
-### 1. Sistema de Interrupções
-
-O simulador reproduz o comportamento de hardware onde dispositivos externos sinalizam à CPU que precisam de atenção.
-
-**Funcionamento**: O processo principal executa continuamente. Quando uma interrupção ocorre, o fluxo é pausado. O sistema "salva" onde parou (contexto), executa a rotina de tratamento do dispositivo específico e, ao finalizar, "restaura" o contexto para continuar o processo principal.
-
-**Analogia**: Você está lendo um livro (processo) e o telefone toca (interrupção). Você marca a página (salva contexto), atende o telefone (trata interrupção) e depois volta a ler da página marcada (restaura contexto).
-
-### 2. Hierarquia de Prioridades
-
-Para garantir que eventos críticos sejam atendidos primeiro, o simulador define níveis de prioridade para cada dispositivo. Se duas interrupções ocorrerem na mesma unidade de tempo, a de maior prioridade é atendida primeiro.
-
-A simulação utiliza a seguinte configuração de dispositivos:
-
-| Dispositivo | Prioridade | Tipo de Prioridade |
-|-------------|------------|-------------------|
-| Teclado     | 1          | Alta              |
-| Impressora  | 2          | Média             |
-| Disco       | 3          | Baixa             |
-
-## Exemplo de Log de Execução
-
-Abaixo, um exemplo do formato de saída gerado pelo simulador, demonstrando o fluxo de interrupção e retomada:
-
-```text
-[Tempo 0]  - Processo principal em execução.
-[Tempo 10] - Interrupção: Teclado - Prioridade: Alta - Armazenando contexto do processo principal.
-[Tempo 11] - Tratando a interrupção do teclado.
-[Tempo 15] - Interrupção tratada. Restaurando o contexto do processo principal.
-[Tempo 16] - Processo principal retomado.
+[Tempo 08] - [ ] Processo principal em execucao (PC=8)
+[Tempo 09] - [!] MULTIPLAS INTERRUPCOES simultaneas: Teclado, Disco (teste de prioridade)
+[Tempo 09] - [*] Interrupcao: Teclado (Prioridade: Alta) - Latencia: 0u
+[Tempo 09] -     -> Armazenando contexto: PC=9, Status='salvo'
+[Tempo 09] -     -> Inicio do tratamento (3 ciclos estimados)
+[Tempo 10] - [>] Continuando tratamento do Teclado (3 ciclos restantes)
 ...
+[Tempo 12] - [OK] Interrupcao tratada. Restaurando contexto (PC=9).
+[Tempo 12] - [<] Processo principal retomado (proxima instrucao: 10)
