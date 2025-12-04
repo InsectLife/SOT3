@@ -3,7 +3,7 @@ Simulador de Gerenciamento de Entrada e Saída com Interrupção
 """
 
 from enum import Enum
-from typing import List
+from typing import List, Optional
 import random
 
 
@@ -31,23 +31,34 @@ class GerenciadorInterrupcoes:
     
     def adicionar_interrupcao(self, tempo: int, dispositivo: Dispositivo) -> None:
         """Adiciona interrupção à fila."""
-        # TODO: Adicionar à fila mantendo ordem de prioridade
-        pass
+        # Cria a tupla com os dados da interrupção
+        interrupcao = (dispositivo.prioridade, tempo, dispositivo.nome)
+        self.fila.append(interrupcao)
+        
+        # Ordena a fila: 
+        # 1º critério: Prioridade (menor valor = maior prioridade)
+        # 2º critério: Tempo de chegada (FIFO para prioridades iguais)
+        self.fila.sort(key=lambda x: (x[0], x[1]))
     
-    def proximo_interrupcao(self) -> tuple:
+    def proximo_interrupcao(self) -> Optional[tuple]:
         """Retorna a próxima interrupção a ser processada."""
-        # TODO: Retornar interrupção de maior prioridade
-        pass
+        if self.fila:
+            return self.fila.pop(0)
+        return None
     
     def salvar_contexto(self, tempo: int) -> None:
         """Salva contexto do processo."""
-        # TODO: Armazenar tempo e estado do processo
-        pass
+        # Armazena um "snapshot" simples do processo (PC simulado e tempo)
+        self.contexto_salvo = {
+            "pc": f"instrucao_no_tempo_{tempo}",
+            "status": "executando"
+        }
     
     def restaurar_contexto(self) -> dict:
         """Restaura contexto salvo."""
-        # TODO: Retornar contexto armazenado
-        pass
+        contexto = self.contexto_salvo
+        self.contexto_salvo = None  # Limpa o contexto salvo
+        return contexto
 
 
 class SimuladorIO:
@@ -64,20 +75,59 @@ class SimuladorIO:
         self.tempo_total = tempo_total
         self.gerenciador = GerenciadorInterrupcoes()
         self.log = []
-    
+        self.tempo_restante_tratamento = 0
+        self.interrupcao_atual_nome = None
+        
     def gerar_interrupcoes(self) -> None:
         """Gera interrupções aleatórias."""
-        # TODO: Simular geração aleatória de interrupções
-        pass
+        # Chance de interrupção (ex: 15% por dispositivo por ciclo)
+        for dispositivo in self.DISPOSITIVOS:
+            if random.random() < 0.15: 
+                self.gerenciador.adicionar_interrupcao(self.tempo, dispositivo)
     
     def processar_ciclo(self) -> None:
         """Executa um ciclo de simulação."""
-        # TODO: Gerar interrupções, processar fila e registrar evento
-        pass
+        # 1. Tenta gerar novas interrupções neste ciclo
+        self.gerar_interrupcoes()
+
+        # 2. Verifica se já estamos tratando uma interrupção (Processador Ocupado com IO)
+        if self.tempo_restante_tratamento > 0:
+            self.registrar_evento(f"Tratando a interrupção do {self.interrupcao_atual_nome}...")
+            self.tempo_restante_tratamento -= 1
+            
+            # Se terminou o tratamento agora
+            if self.tempo_restante_tratamento == 0:
+                ctx = self.gerenciador.restaurar_contexto()
+                self.registrar_evento(f"Interrupção tratada. Restaurando o contexto do processo principal.")
+                self.interrupcao_atual_nome = None
+            return
+
+        # 3. Se não estamos ocupados, verificamos se há algo na fila (Scheduler)
+        proxima = self.gerenciador.proximo_interrupcao()
+        
+        if proxima:
+            prioridade, tempo_origem, nome_disp = proxima
+            
+            # Salva o contexto atual antes de tratar
+            self.gerenciador.salvar_contexto(self.tempo)
+            
+            # Configura o estado de "Tratando Interrupção"
+            self.interrupcao_atual_nome = nome_disp
+            # Define um tempo de duração baseado na prioridade (opcional, mas didático)
+            # Ex: Alta prioridade resolve rápido (3 ticks), Baixa demora mais (5 ticks)
+            # Ou fixo para simplificar. Vamos usar um valor aleatório entre 2 e 4.
+            self.tempo_restante_tratamento = random.randint(2, 4)
+            
+            msg_prio = "Alta" if prioridade == 1 else "Média" if prioridade == 2 else "Baixa"
+            self.registrar_evento(f"Interrupção: {nome_disp} - Prioridade: {msg_prio} - Armazenando contexto do processo principal.")
+        
+        else:
+            # 4. Se não há interrupções, o processo principal segue (CPU User Mode)
+            self.registrar_evento("Processo principal em execução.")
     
     def registrar_evento(self, evento: str) -> None:
         """Registra evento no log."""
-        mensagem = f"[Tempo {self.tempo}] - {evento}"
+        mensagem = f"[Tempo {self.tempo:02d}] - {evento}"
         self.log.append(mensagem)
         print(mensagem)
     
