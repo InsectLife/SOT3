@@ -70,6 +70,7 @@ O simulador gera logs visuais para facilitar o rastreamento do fluxo de execuç�
 ## 🔍 Exemplo de Saída
 
 
+```
 [Tempo 08] - [ ] Processo principal em execucao (PC=8)
 [Tempo 09] - [!] MULTIPLAS INTERRUPCOES simultaneas: Teclado, Disco (teste de prioridade)
 [Tempo 09] - [*] Interrupcao: Teclado (Prioridade: Alta) - Latencia: 0u
@@ -79,3 +80,4 @@ O simulador gera logs visuais para facilitar o rastreamento do fluxo de execuç�
 ...
 [Tempo 12] - [OK] Interrupcao tratada. Restaurando contexto (PC=9).
 [Tempo 12] - [<] Processo principal retomado (proxima instrucao: 10)
+```
